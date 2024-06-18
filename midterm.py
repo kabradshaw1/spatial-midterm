@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+from pathlib import Path
 import os
 
 # Remove non active voters from the dataset and save the filtered dataset to a new CSV file
@@ -32,6 +33,8 @@ gdf_wgs84.to_file(geopackage_path, driver='GPKG')
 """
 Match the address "res_street_address" from the active_voters.csv file with the FullAddres in the address_4326.gpkg file.
 The addresses do not have the same format, so we need to clean the addresses before we can match them.
+
+Use parallel processing to match the addresses.  Can use Pool and Starmap or ProcessPoolExecutor and map.
 """
 
 # Create a GeoDataFrame with a the street address and geometry for the matched address and name it matched_address.gpkg
