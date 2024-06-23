@@ -2,12 +2,17 @@ import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
+import os
 
-# Remove non active voters from the dataset and save the filtered dataset to a new CSV file
-data_path = Path('../Data')
+# Get the current script's directory
+script_dir = Path(__file__).resolve().parent
+
+# Resolve the data path relative to the script directory
+data_path = script_dir.parent / 'Data'
 
 ncvoter7 = data_path / "ncvoter7.txt"
 
+# Read the file with a fallback encoding
 try:
     df = pd.read_csv(ncvoter7, delimiter='\t', encoding='utf-8')
 except UnicodeDecodeError:
@@ -15,7 +20,7 @@ except UnicodeDecodeError:
 
 active_voters_df = df[df['voter_status_desc'] == 'ACTIVE']
 
-filtered_file_path = './active_voters.csv'
+filtered_file_path = script_dir / 'active_voters.csv'
 active_voters_df.to_csv(filtered_file_path, index=False)
 
 """
@@ -26,11 +31,16 @@ shapefile_path = data_path / "Beaufort_Count_Streets/addresses.shp"
 
 gdf = gpd.read_file(shapefile_path)
 
-gdf = gdf.set_crs('EPSG:4269')
-
+# Transform the CRS to WGS 84
 gdf_wgs84 = gdf.to_crs('EPSG:4326')
 
-geopackage_path = './addresses_4326.gpkg'
+geopackage_path = script_dir / 'addresses_4326.gpkg'
+
+# Remove existing file if it exists to prevent conflicts
+if geopackage_path.exists():
+    geopackage_path.unlink()
+
+# Save the GeoDataFrame to a GeoPackage
 gdf_wgs84.to_file(geopackage_path, driver='GPKG')
 
 """
@@ -70,7 +80,12 @@ matched_df = pd.merge(active_voters_df, gdf_wgs84, left_on='cleaned_res_street_a
 Create a GeoDataFrame with the street address and geometry for the matched address and save it
 """
 matched_gdf = gpd.GeoDataFrame(matched_df, geometry='geometry')
-matched_geopackage_path = './matched_addresses.gpkg'
+matched_geopackage_path = script_dir / 'matched_addresses.gpkg'
+
+# Remove existing file if it exists to prevent conflicts
+if matched_geopackage_path.exists():
+    matched_geopackage_path.unlink()
+
 matched_gdf.to_file(matched_geopackage_path, driver='GPKG')
 
 print(f"Matched addresses have been successfully saved to {matched_geopackage_path}")
