@@ -4,7 +4,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 # Remove non active voters from the dataset and save the filtered dataset to a new CSV file
-ncvoter7 = Path('../Data/ncvoter7.txt')
+data_path = Path('../Data')
 
 df = pd.read_csv(ncvoter7, delimiter='\t')
 
