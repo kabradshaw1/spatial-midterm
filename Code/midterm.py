@@ -1,8 +1,6 @@
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
-import os
 
 # Get the current script's directory
 script_dir = Path(__file__).resolve().parent
@@ -46,8 +44,6 @@ gdf_wgs84.to_file(geopackage_path, driver='GPKG')
 """
 Match the address "res_street_address" from the active_voters.csv file with the FullAddres in the address_4326.gpkg file.
 The addresses do not have the same format, so we need to clean the addresses before we can match them.
-
-Use parallel processing to match the addresses.  Can use Pool and Starmap or ProcessPoolExecutor and map.
 """
 
 def clean_address(address):
@@ -60,18 +56,13 @@ def clean_address(address):
     address = address.replace(' EAST', ' E').replace(' WEST', ' W')
     return address
 
-def clean_addresses_parallel(addresses):
-    with ProcessPoolExecutor() as executor:
-        cleaned_addresses = list(executor.map(clean_address, addresses))
-    return cleaned_addresses
-
 # Load the cleaned data
 active_voters_df = pd.read_csv(filtered_file_path)
 gdf_wgs84 = gpd.read_file(geopackage_path)
 
-# Clean the addresses in parallel
-active_voters_df['cleaned_res_street_address'] = clean_addresses_parallel(active_voters_df['res_street_address'])
-gdf_wgs84['cleaned_FullAddres'] = clean_addresses_parallel(gdf_wgs84['FullAddres'])
+# Clean the addresses without parallel processing
+active_voters_df['cleaned_res_street_address'] = active_voters_df['res_street_address'].apply(clean_address)
+gdf_wgs84['cleaned_FullAddres'] = gdf_wgs84['FullAddres'].apply(clean_address)
 
 # Perform the matching of addresses
 matched_df = pd.merge(active_voters_df, gdf_wgs84, left_on='cleaned_res_street_address', right_on='cleaned_FullAddres', how='inner')
