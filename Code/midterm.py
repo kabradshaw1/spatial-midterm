@@ -6,7 +6,12 @@ from concurrent.futures import ProcessPoolExecutor
 # Remove non active voters from the dataset and save the filtered dataset to a new CSV file
 data_path = Path('../Data')
 
-df = pd.read_csv(ncvoter7, delimiter='\t')
+ncvoter7 = data_path / "ncvoter7.txt"
+
+try:
+    df = pd.read_csv(ncvoter7, delimiter='\t', encoding='utf-8')
+except UnicodeDecodeError:
+    df = pd.read_csv(ncvoter7, delimiter='\t', encoding='latin1')
 
 active_voters_df = df[df['voter_status_desc'] == 'ACTIVE']
 
@@ -17,7 +22,7 @@ active_voters_df.to_csv(filtered_file_path, index=False)
 Read the addresses.shp file into a GeoDataFrame and convert it into WGS 84, so we can use Lat and Lon.  
 Save the GeoDataFrame into a GeoPack file named adddress_4326.gpkg
 """
-shapefile_path = Path('../Data/Beaufort_Count_Streets/addresses.shp')
+shapefile_path = data_path / "Beaufort_Count_Streets/addresses.shp"
 
 gdf = gpd.read_file(shapefile_path)
 
