@@ -55,43 +55,43 @@ Match the address "res_street_address" from the active_voters.csv file with the 
 The addresses do not have the same format, so we need to clean the addresses before we can match them.
 """
 
-def clean_address(address):
-    address = str(address).upper().strip()  # Convert to uppercase and trim whitespace
-    address = address.replace('.', '').replace(',', '')  # Remove punctuation
-    address = address.replace(' STREET', ' ST').replace(' ROAD', ' RD')  # Standardize abbreviations
-    address = address.replace(' AVENUE', ' AVE').replace(' BOULEVARD', ' BLVD')
-    address = address.replace(' DRIVE', ' DR').replace(' LANE', ' LN')
-    address = address.replace(' NORTH', ' N').replace(' SOUTH', ' S')
-    address = address.replace(' EAST', ' E').replace(' WEST', ' W')
-    return address
+# def clean_address(address):
+#     address = str(address).upper().strip()  # Convert to uppercase and trim whitespace
+#     address = address.replace('.', '').replace(',', '')  # Remove punctuation
+#     address = address.replace(' STREET', ' ST').replace(' ROAD', ' RD')  # Standardize abbreviations
+#     address = address.replace(' AVENUE', ' AVE').replace(' BOULEVARD', ' BLVD')
+#     address = address.replace(' DRIVE', ' DR').replace(' LANE', ' LN')
+#     address = address.replace(' NORTH', ' N').replace(' SOUTH', ' S')
+#     address = address.replace(' EAST', ' E').replace(' WEST', ' W')
+#     return address
 
-# Load the cleaned data
-active_voters_df = pd.read_csv(filtered_file_path)
-gdf_wgs84 = gpd.read_file(geopackage_path)
+# # Load the cleaned data
+# active_voters_df = pd.read_csv(filtered_file_path)
+# gdf_wgs84 = gpd.read_file(geopackage_path)
 
-# Clean addresses in parallel
-def parallel_clean_addresses(addresses):
-    with ProcessPoolExecutor() as executor:
-        cleaned_addresses = list(executor.map(clean_address, addresses))
-    return cleaned_addresses
+# # Clean addresses in parallel
+# def parallel_clean_addresses(addresses):
+#     with ProcessPoolExecutor() as executor:
+#         cleaned_addresses = list(executor.map(clean_address, addresses))
+#     return cleaned_addresses
 
-# Apply parallel cleaning
-active_voters_df['cleaned_res_street_address'] = parallel_clean_addresses(active_voters_df['res_street_address'])
-gdf_wgs84['cleaned_FullAddres'] = parallel_clean_addresses(gdf_wgs84['FullAddres'])
+# # Apply parallel cleaning
+# active_voters_df['cleaned_res_street_address'] = parallel_clean_addresses(active_voters_df['res_street_address'])
+# gdf_wgs84['cleaned_FullAddres'] = parallel_clean_addresses(gdf_wgs84['FullAddres'])
 
-# Perform the matching of addresses
-matched_df = pd.merge(active_voters_df, gdf_wgs84, left_on='cleaned_res_street_address', right_on='cleaned_FullAddres', how='inner')
+# # Perform the matching of addresses
+# matched_df = pd.merge(active_voters_df, gdf_wgs84, left_on='cleaned_res_street_address', right_on='cleaned_FullAddres', how='inner')
 
-""" 
-Create a GeoDataFrame with the street address and geometry for the matched address and save it
-"""
-matched_gdf = gpd.GeoDataFrame(matched_df, geometry='geometry')
-matched_geopackage_path = script_dir / 'matched_addresses.gpkg'
+# """ 
+# Create a GeoDataFrame with the street address and geometry for the matched address and save it
+# """
+# matched_gdf = gpd.GeoDataFrame(matched_df, geometry='geometry')
+# matched_geopackage_path = script_dir / 'matched_addresses.gpkg'
 
-# Remove existing file if it exists to prevent conflicts
-if matched_geopackage_path.exists():
-    matched_geopackage_path.unlink()
+# # Remove existing file if it exists to prevent conflicts
+# if matched_geopackage_path.exists():
+#     matched_geopackage_path.unlink()
 
-matched_gdf.to_file(matched_geopackage_path, driver='GPKG')
+# matched_gdf.to_file(matched_geopackage_path, driver='GPKG')
 
-print(f"Matched addresses have been successfully saved to {matched_geopackage_path}")
+# print(f"Matched addresses have been successfully saved to {matched_geopackage_path}")
