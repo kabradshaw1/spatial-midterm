@@ -1,6 +1,7 @@
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 
 # Get the current script's directory
 script_dir = Path(__file__).resolve().parent
@@ -60,9 +61,15 @@ def clean_address(address):
 active_voters_df = pd.read_csv(filtered_file_path)
 gdf_wgs84 = gpd.read_file(geopackage_path)
 
-# Clean the addresses without parallel processing
-active_voters_df['cleaned_res_street_address'] = active_voters_df['res_street_address'].apply(clean_address)
-gdf_wgs84['cleaned_FullAddres'] = gdf_wgs84['FullAddres'].apply(clean_address)
+# Clean addresses in parallel
+def parallel_clean_addresses(addresses):
+    with ProcessPoolExecutor() as executor:
+        cleaned_addresses = list(executor.map(clean_address, addresses))
+    return cleaned_addresses
+
+# Apply parallel cleaning
+active_voters_df['cleaned_res_street_address'] = parallel_clean_addresses(active_voters_df['res_street_address'])
+gdf_wgs84['cleaned_FullAddres'] = parallel_clean_addresses(gdf_wgs84['FullAddres'])
 
 # Perform the matching of addresses
 matched_df = pd.merge(active_voters_df, gdf_wgs84, left_on='cleaned_res_street_address', right_on='cleaned_FullAddres', how='inner')
