@@ -28,10 +28,17 @@ Save the GeoDataFrame into a GeoPack file named adddress_4326.gpkg
 """
 shapefile_path = data_path / "Beaufort_Count_Streets/addresses.shp"
 
-gdf = gpd.read_file(shapefile_path)
+address_gdf = gpd.read_file(shapefile_path)
+
+
+# This step is not necessary, but the the csv could be a good reference
+address_df = address_gdf.drop(columns=["geometry"])
+address_df.to_csv("beaufort_address.csv")
+
+address_gdf.to_csv("beaufort_address_gdf.csv")
 
 # Transform the CRS to WGS 84
-gdf_wgs84 = gdf.to_crs('EPSG:4326')
+address_4326 = address_gdf.to_crs(epsg=4326)
 
 geopackage_path = script_dir / 'addresses_4326.gpkg'
 
@@ -40,7 +47,8 @@ if geopackage_path.exists():
     geopackage_path.unlink()
 
 # Save the GeoDataFrame to a GeoPackage
-gdf_wgs84.to_file(geopackage_path, driver='GPKG')
+address_4326.to_csv("address_4326.csv")
+address_4326.to_file(geopackage_path, driver='GPKG')
 
 """
 Match the address "res_street_address" from the active_voters.csv file with the FullAddres in the address_4326.gpkg file.
